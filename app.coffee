@@ -80,16 +80,18 @@ endingSection = new Layer
 	y: CARD_NUM * CARD_HEIGHT + (CARD_NUM - 2) * CARD_MARGIN + INIT_CARD_Y
 	height: ENDING_HEIGHT
 	width: DEVICE_WIDTH
-	superLayer: container
 	backgroundColor: 'transparent'
+	opacity: 0
 	
-endingSection.html = '夕阳下的奔跑<br>是我逝去的青春'
+endingSection.html = '在过去的一年里<br>你总共获得了1024个赞'
 endingSection.style = 
 	fontSize: '58px'
 	textAlign: 'center'
 	lineHeight: '80px'
 	paddingTop: '180px'
 	
+endingSection.center()
+endingSection.placeBehind(container)
 	
 btnEnter = new Layer
 	y: 300
@@ -142,15 +144,11 @@ initCards = ->
 		card = new Layer
 			y: INIT_CARD_Y
 			backgroundColor: 'transparent'
-# 			backgroundColor: Utils.randomColor()
 			width: CARD_WIDTH
 			height: CARD_HEIGHT
 			borderRadius: 10
 			superLayer: container
-			
-		
-			
-
+						
 		card.centerX()
 		
 		photos[i].x = 0
@@ -159,25 +157,22 @@ initCards = ->
 		
 		photos[i].name = 'photo'
 		
-		if i > 0
-# 			card.backgroundColor = '#fff'
-# 			card.opacity = 0.9 * Math.pow(0.9, i)
-# 			empty = photoEmpty2.copy()
-			photos[i].opacity = 0
-			
-			if i == 2
-				card.addSubLayer(photoEmpty2)
-				photoEmpty2.x = 0
-				photoEmpty2.y = 0
-				
-				photoEmpty2.name = 'photoEmpty'
-			
-			if i == 1
-				card.addSubLayer(photoEmpty)
-				photoEmpty.x = 0
-				photoEmpty.y = 0
-				
-				photoEmpty.name = 'photoEmpty'
+# 		if i > 0
+# 			photos[i].opacity = 0
+# 			
+# 			if i == 2
+# 				card.addSubLayer(photoEmpty2)
+# 				photoEmpty2.x = 0
+# 				photoEmpty2.y = 0
+# 				
+# 				photoEmpty2.name = 'photoEmpty'
+# 			
+# 			if i == 1
+# 				card.addSubLayer(photoEmpty)
+# 				photoEmpty.x = 0
+# 				photoEmpty.y = 0
+# 				
+# 				photoEmpty.name = 'photoEmpty'
 		
 		mask = new Layer
 			superLayer: card
@@ -222,22 +217,59 @@ initCards = ->
 			fontSize: '28px'
 			lineHeight: '28px'
 			textAlign: 'center'
-
 		
-			
-# 		if i != 0
-# 			card.initScale = CARD_NEXT_SCALE * Math.pow(CARD_OFFSET_SCALE,i - 1)
-# 			
-# 		else
-# 			card.initScale = CARD_CURRENT_SCALE
 		
-		card.initScale = CARD_NEXT_SCALE * Math.pow(CARD_OFFSET_SCALE,i - 1)
-		card.initY = INIT_CARD_Y + Math.floor(i * CARD_OFFSET_Y * Math.pow(0.9, i))
-		
-		card.scale = card.initScale	
-		card.y = card.initY
-
 		cards[i] = card
+
+initStackPos = (cards) ->
+	cardFirst  = cards[0]
+	
+# 	cardFirst.draggable.enabled = true
+# 	cardFirst.draggable.speedX = 0
+	
+	for i in [(CARD_NUM - 1)..0]
+		cards[i].subLayersByName('mask')[0].opacity = 0
+		
+		if i > 0
+			photos[i].opacity = 0
+
+			if i == 2
+				cards[i].addSubLayer(photoEmpty2)
+				photoEmpty2.x = 0
+				photoEmpty2.y = 0
+				photoEmpty2.opacity = 1
+				
+				photoEmpty2.name = 'photoEmpty'
+			
+			if i == 1
+				cards[i].addSubLayer(photoEmpty)
+				photoEmpty.x = 0
+				photoEmpty.y = 0
+				photoEmpty.opacity = 1
+				
+				photoEmpty.name = 'photoEmpty'
+			
+# 			cards[i].subLayersByName('photoEmpty')[0].animate
+# 				properties:
+# 					opacity: 1
+				
+				
+		cards[i].initScale = CARD_NEXT_SCALE * Math.pow(CARD_OFFSET_SCALE,i - 1)
+		cards[i].initY = INIT_CARD_Y + Math.floor(i * CARD_OFFSET_Y * Math.pow(0.9, i))
+		
+		cards[i].scale = cards[i].initScale	
+		cards[i].y = cards[i].initY
+		
+# 		if cards[i].y >= INIT_CARD_Y
+# 		cards[i].subLayersByName('photo')[0].animate
+# 			properties:
+# 				opacity: 1
+					
+# 			if i == 1 or i ==2
+# 				cards[i].subLayersByName('photoEmpty')[0].animate
+# 					properties:
+# 						opacity: 1
+
 
 # 初始化卡片序列
 initStack = (cards) ->
@@ -245,13 +277,13 @@ initStack = (cards) ->
 	
 	cardFirst.draggable.enabled = true
 	cardFirst.draggable.speedX = 0
+	
+	initStackPos(cards)
 		
 # 	第一张卡片拖动
 	cardFirst.on Events.DragMove, ->
 		
 		dragDist = INIT_CARD_Y - cardFirst.y + EXPANDED_CARD_Y
-		
-# 		print dragDist
 		
 # 		移动除第一张卡片外的其它卡片
 		for i in [0..cards.length - 1]
@@ -273,7 +305,6 @@ initStack = (cards) ->
 			else
 				cards[i].cardY = cards[i].y
 				
-			
 			
 			cards[i].cardScale =
 				Utils.modulate(dragDist,
@@ -298,7 +329,6 @@ initStack = (cards) ->
 						scale: CARD_CURRENT_SCALE
 					curve: 'spring(200,20,10)'
 			
-			
 			cardFirst.ignoreEvents = true
 			
 			container.draggable.enabled = true
@@ -308,18 +338,16 @@ initStack = (cards) ->
 			scrollTip.animateStop()
 			scrollTip.opacity = 0
 			
-# 			容器开始拖动时
-# 			container.on Events.TouchStart, ->
-# 				for card in cards
-# 					card.originalY = card.y
+			container.animate
+				properties:
+					y: -650
+				curve: 'spring(200,25,10)'	
 			
 # 			容器拖动时
 			container.on Events.DragMove, ->
 				dragV = Math.abs(container.draggable.calculateVelocity().y)
-				
-# 				margin = Utils.modulate(dragV, [0, 10], [0,  CARD_MARGIN_MAX_OFFSET], false)
-
 				scale = Utils.modulate(dragV, [0, 10], [1,  0.9], true)
+# 				margin = Utils.modulate(dragV, [0, 10], [0,  CARD_MARGIN_MAX_OFFSET], false)
 				
 # 				container.animate
 # 					properties:
@@ -332,8 +360,6 @@ initStack = (cards) ->
 					properties:
 						opacity: meOpacity
 					curve: 'spring(200,20,10)'
-					
-# 				likeOpacity = 1 - meOpacity
 
 				isFixed = false
 				
@@ -349,8 +375,6 @@ initStack = (cards) ->
 					if cards[i].widgetOpacity >= 1
 						isFixed = true
 						
-# 					print likeOpacity
-						
 					cards[i].subLayersByName('like')[0].animate
 						properties:
 							opacity: cards[i].widgetOpacity
@@ -359,31 +383,58 @@ initStack = (cards) ->
 					cards[i].subLayersByName('mask')[0].animate
 						properties:
 							opacity: cards[i].widgetOpacity
-						curve: 'spring(200,20,10)'	
-					
-					
-# 				if container.y >= INIT_CARD_Y - CONTAINER_DRAG_MAX
-# 					if container.draggable.calculateVelocity().y > 0
-# 						container.draggable.speedY = 0.1
-# 					else
-# 						container.draggable.speedY = 1.2
-					
-# 					print container.draggable.calculateVelocity().y
+						curve: 'spring(200,20,10)'
+						
+						
+				if container.y <= -1850
+# 					endingSection.animateStop()
+					endingSection.animate
+						properties:
+							opacity: 1
+						curve: 'ease-in-out'
+						time: 0.4
+						
+				if container.y > -1800
+# 					endingSection.animateStop()
+					endingSection.animate
+						properties:
+							opacity: 0
+						curve: 'ease-in-out'
+						time: 0.2
 				
-# 				for card in cards
-# 					card.originY = 0
-# 					card.animate
-# 						properties:
-# 							scaleY: scale
-# 						curve: 'spring(400,20,10)'
 			
 # 			拖动容器时
 			container.on Events.DragEnd, ->
 				container.scaleY = 1
-# 				container.draggable.speedY = 1.2
 				
 				topMax = CONTAINER_DRAG_REBOUNCE
 				bottomMax = -container.height + DEVICE_HEIGHT - CONTAINER_DRAG_REBOUNCE
+				
+# 				print container.y
+
+				if container.y <= -1850
+# 					endingSection.animateStop()
+					endingSection.animate
+						properties:
+							opacity: 1
+						curve: 'ease-in-out'
+						time: 0.4
+						
+				if container.y > -1800
+# 					endingSection.animateStop()
+					endingSection.animate
+						properties:
+							opacity: 0
+						curve: 'ease-in-out'
+						time: 0.2
+				
+				if container.y >= 220
+					initStack(cards)
+# 					for i in [1..(CARD_NUM - 1)]
+# # 						if cards[i].y >= INIT_CARD_Y
+# 						cards[i].subLayersByName('photo')[0].animate
+# 							properties:
+# 								opacity: 0
 				
 				if container.y > topMax
 					container.animate
@@ -396,12 +447,11 @@ initStack = (cards) ->
 						properties:
 							y: bottomMax
 						curve: 'spring(200,25,10)'
-# 				for card in cards
-# 					card.scaleY = 1
 
 		else
 			
 # 			卡片复位
+# 			initStack(cards)
 			for i in [(CARD_NUM - 1)..0]
 				cards[i].animate
 					properties:
